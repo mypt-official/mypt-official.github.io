@@ -1,5 +1,7 @@
+---
 layout: post
-title:  "Optional"
+title:  "추천시스템 기본개념"
+---
 
 # Optionals
 
