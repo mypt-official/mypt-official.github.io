@@ -1,7 +1,8 @@
 ---
 layout: post
 title:  "Kotlin UI 제작시 편한 기능"
-categories: Kotlin create UI
+categories: [프로그래밍]
+tags: [android, kotlin]
 ---
 # Kotlin UI 제작시 편한 기능
 

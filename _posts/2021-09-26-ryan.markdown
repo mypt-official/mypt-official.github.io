@@ -2,7 +2,7 @@
 layout: post
 title:  "추천시스템 기본개념"
 date:   2021-09-26 15:46:00 +0900
-categories: welcome
+categories: [머신러닝]
 ---
 
 * * *
