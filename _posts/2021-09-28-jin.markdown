@@ -1,3 +1,8 @@
+---
+layout: post
+title:  "브랜드마케팅"
+categories: Brand Marketing
+---
 # 브랜드마케팅
 
 1. 브랜딩 개요
