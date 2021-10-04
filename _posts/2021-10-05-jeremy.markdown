@@ -38,7 +38,9 @@ categories: Swift
 - Reference Type은 실제값을 힙에 저장, 힙메모리 주소를 스택에 저장하고 실제값에 접근할때 스택에 있는 주소를 통해 접근
 
 > 값형식(value type)은 항상 stack 에 저장됨 
-> 값을 전달할때마다 새로운 복사본이 생성됨
+> 값을 전달할때마다 새로운 복사본이 생성됨   
+
+
 ```Swift
 struct SizeValue {
 	var width = 0.0
