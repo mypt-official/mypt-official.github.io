@@ -1,0 +1,53 @@
+---
+layout: post
+title:  "추천시스템01_영화개봉년도 분석"
+date:   2021-10-07 09:00:00 +0900
+categories: [머신러닝]
+---
+
+* * *
+마이피티 & 맛집대장 서비스 고도화를 위한 추천시스템 도입을 준비하고 있습니다.
+* * *
+<br/>
+
+#### 1. 영화데이터 불러오기
+```
+// python data analysis library
+import pandas as pd
+
+// 특정 디렉토리의 파일 내 데이터 불러온 다음 변수로 저장
+movies = pd.read_csv('/content/drive/MyDrive/추천시스템/data/ml-latest-small/movies.csv', index_col='movieId')
+```
+
+#### 2. data handling 관련 기본문법
+```
+// 전체 목록 보기
+movies
+
+// 전체 로우 갯수와 컬럼수 보기
+movies.shape
+
+// year라는 컬럼을 생성하면서 영화제목에 있는 년도를 추출해서 데어터 넣기 
+movies['year'] = movies['title'].str.extract('(\(\d\d\d\d\))')
+
+// 결측값 핸들링하기
+movies[movies['year'].isnull()]
+movies['year'] = movies['year'].fillna('2050')
+
+// 개봉된 영화 수 조회
+movies['year'].value_counts()
+```
+
+#### 3. 데이터에 가장 많이 출현하는 개봉연도를 찾기
+```
+// python data 시각화 관련 패키지
+%matplotlib inline
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+// 시각화 하기
+plt.figure(figsize=(50,10)) -> 사이즈 조절
+sns.countplot(data=movies, x='year')
+```
+
+<img src="/images/ryan-seaborn-movie-years.png" width="750px" height="300px" title="데이터 시각화" alt="데이터 시각화"/>
