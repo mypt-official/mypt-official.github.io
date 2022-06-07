@@ -1,0 +1,245 @@
+# Kotlin 코드를 보다 깔끔하게 만들기
+
+코틀린의 표준 라이브러리는 다양한 기능 과 편리한 기능으로 함수형 프로그래밍을 쉽게 적용할 수 있도록 도와줍니다.
+
+그중에서도 **apply, with, let, also, run**와 같은 범위 지정 함수들이 있습니다.
+
+각 기능들이 얼핏 보면 비슷해서 헷갈릴 수 있고 사용하면 보다 깔끔하게 코드를 관리 할 수 있습니다.
+
+범위 지정 함수 란 특정 객체에 대한 작업을 블록 안에 넣어 실행할 수 있도록 하는 함수입니다.
+
+블록은 특정 객체에 대해 할 작업의 범위가 되며, 따라서 범위 지정 함수라 부른다.
+
+다른 말로 수신객체 지정 람다(함수) 라고도 부른다. → 수신객체를 명시하지 않거나 it을 호출하는 것만으로 람다 안에서 수신객체의 메서드를 호출할 수 있도록 해주기 때문이다.
+
+이것이 가능한 이유는 블록(block) 람다식에서 수신객체를 람다의 입력 파라미터 혹은 수신객체로 사용하였기 때문이다.
+
+무슨 말🤔인지 모르겠으니 아래 예제를 보며 확인해보자(여러번 보다보면 무슨 말인지 알게 되겠지,,,?)
+
+# a**pply**
+
+```kotlin
+inline fun <T> T.apply(block: T.() -> Unit): T {
+    block()
+    return this
+}
+```
+
+- 수신 객체의 람다 내부에서 수신 객체의 함수를 사용 ❎, 수신 객체 자신을 다시 반환 하려는 경우 apply 사용
+
+사용 예)
+
+```kotlin
+Val Peter = Person().apply {
+// apply의 블록에서는 오직 프로퍼티만 사용합니다.
+	name = “Peter”
+	age = 18
+}
+
+// 사용하지 않으면
+val clark = Person()
+
+clark.name = “clark”
+clark.age = 18
+```
+
+장점 → clark 이라는 변수를 계속 호출하지 않아도 된다. 가독성 ⬆️
+
+# **let**
+
+```kotlin
+inline fun <T, R> T.let(block: (T) -> R): R {
+    return block(this)
+}
+```
+
+- [run](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47) 과 [with](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47)와 비슷하다.
+    - 다른점 → 수신객체에 접근할 때 it.name 식으로 접근해야한다.
+    - 다른점2 → nullable한 값을 처리해야할 때 사용
+- 물론 let은 nullable 하지 않은 대상에도 사용할 수 있지만, 실무에서는 nullable한 값이 아닐경우 [run](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47)을 사용하는 것이 일반적.
+
+사용 예)
+
+```kotlin
+// 1) 지정된 값이 **null이 아닌 경우에 코드를 실행**해야 하는 경우
+getNullablePerson()?.let {
+
+	// null 이 아닐 때만 실행됩니다.
+	promote(it)
+}
+	
+// 2) Nullable 객체를 다른 nullable 객체로 변환하는 경우
+val drivesLicence : Licence? = getNullablePerson()?.let {
+
+	// nullable Personal 객체를 nullable driversLicence 객체로 변경합니다.
+	licenceService.getDriversLicence(it)
+}
+	
+// 3) 단일 지역 변수의 범위를 제한하는 경우
+val person : Person = getPerson()
+
+getPersonDao().let { dao ->
+	// 변수 dao 의 범위는 이 블록 안으로 제한됩니다.
+	dao.insert(person)
+}
+
+// let을 안 쓰면
+// 1) 
+val person : Person? = getPromotablePerson()
+
+if (person != null){
+	promte(person)
+}
+
+// 2) 
+val driver : Person? = getDriver()
+
+val driverLicence : Licence? = 
+	if (driver == null) 
+		null
+	else	
+		licenceService.getDriversLicence(it)
+
+// 3) 
+val person : Person = getPerson()
+
+val personDao : PersonDao = getPersonDao()
+
+personDao.insert(person)
+```
+
+# **with**
+
+```kotlin
+inline fun <T, R> with(receiver: T, block: T.() -> R): R {
+    return receiver.block()
+}
+```
+
+- with는 수신객체에 대한 작업 후 마지막 라인을 return 한다.
+- [run](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47) 과 완전 똑같이 동작!
+    - 다른점 → run은 확장함수, with는 수신객체 파라미터로 받아 사용해야함.
+    - run 을 사용하는게 훨씬 깔끔하므로 실제로는 거의 사용 ❎
+- Non-nullable 수신 객체이고 결과가 필요하지 않은 경우에만 with를 사용합니다.
+
+사용 예)
+
+```kotlin
+val person : Person = getPerson()
+
+with(person) {
+	print(name)
+	print(age)
+}
+
+// 안 쓰면
+val person : Person = getPerson()
+
+print(person.name)
+print(person.age)
+```
+
+# r**un**
+
+```kotlin
+inline fun <T, R> T.run(block: T.() -> R): R {
+    return block()
+}
+```
+
+- run 은 [apply](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47) 와 똑같이 동작
+    - BUT 수신객체 return ❎
+    - run 블록의 마지막 라인을 return 한다.
+    - 수신객체에 대해 특정한 동작을 수행한 후 결과값을 리턴 받아야 할 경우 사용
+- 어떤 값을 계산할 필요가 있거나 여러개의 지역 변수의 범위를 제한하려면 run을 사용합니다.
+- 매개 변수로 전달된 명시적 수신객체를 암시적 수신 객체로 변환할 때 run()을 사용할 수 있습니다.
+
+사용 예)
+
+```kotlin
+data class Person(
+	var name: String = "",
+	var age: Int = 0,
+	var temperature: Float = 36.5f
+) {
+	fun isSick(): Boolean = temperature > 37.4f
+}
+
+fun main() {
+	val person: Person = Person(name = "Jacob", age = 29, temperature = 36.5f)
+	val isPersonSick = person.run {
+		temperature = 37.6f
+		isSick() // return 값
+	}
+
+	print("isPersonSick = $isPersonSick")
+}
+```
+
+# **also**
+
+```kotlin
+inline fun <T> T.also(block: (T) -> Unit): T {
+    block(this)
+    return this
+}
+```
+
+- [apply](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47)와 마찬가지로 수신객체 자신을 반환
+    - 내부 수신객체를 사용하기 위해서는 it을 사용해야함.
+    - 블록 함수가 다른 값을 반환 해야하는 경우에는 also를 사용할 수 없습니다.
+- 수신 객체 람다가 전달된 수신 객체를 전혀 사용하지 않거나 수신 객체의 속성을 변경하지 않고 사용하는 경우 also를 사용합니다.
+- 예를 들자면, 객체의 사이드 이팩트를 확인하거나 수신 객체의 프로퍼티에 데이터를 할당하기 전에 해당 데이터의 유효성을 검사할 때 매우 유용합니다
+- 여러 문제로 also 는 거의 사용되지 않음
+    - 사용할 때는 프로퍼티를 바꾸지 않고 동작을 추가적으로 해야하는 경우(로깅 등…)에서만 가~~끔 사용된다.
+
+사용 예)
+
+```kotlin
+class Book(author : Person) {
+
+	val author = author.also {
+		requiresNotNull(it.age)
+		print(it.name)
+	}
+}
+
+// 안 쓰면
+class Book(val author : Person) {
+
+	init{
+		requireNotNull(author.age)
+		print(author.name)
+	}
+}
+```
+
+# 위 기능을 사용시 유의할 점
+
+- 중첩이 가능하지만 가독성 ⬇️,  파악 😔 ( 원칙적으로는 중첩 X)
+- [apply](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47), [run](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47), [with](https://www.notion.so/Kotlin-c48cb466a39745fabf233aa5b0504b47)는 중첩하지마세요(이유 : this 이름을 다르게 지정할 수 없기에 혼동하기 쉬움)
+- also와 let을 중첩 해야만 할 때는 암시적 수신 객체를 가르키는 매개 변수인 it을 사용하지 마세요. 대신 명시적인 이름을 제공하여 코드상의 이름이 혼동되지 않도록 해야합니다.
+- But 중첩과 연동은 다르다 chain
+
+연동 예)
+
+```kotlin
+private fun insert(user : User) = SqlBuilder().apply {
+
+	append(“insert into user (email, name, age) Values “)
+	append(“ (?”, user.email)
+	append(“  ,?”, user.name)
+	append(“ ,?)”, user.age)
+
+}.also {
+	print(“Executing SQL update: $it.”)
+}.run {
+	jdbc.update(this) > 0
+}
+```
+
+아래 사진은 각 코드의 구현 방식과 예를 사진으로 정리 해둔 것이기에 기억이 나지 않을 때 한 번씩 들여다 보면 좋을 것 같습니다.
+
+![Untitled](Kotlin%20%E1%84%8F%E1%85%A9%E1%84%83%E1%85%B3%E1%84%85%E1%85%B3%E1%86%AF%20%E1%84%87%E1%85%A9%E1%84%83%E1%85%A1%20%E1%84%81%E1%85%A1%E1%86%AF%E1%84%81%E1%85%B3%E1%86%B7%E1%84%92%E1%85%A1%E1%84%80%E1%85%A6%20%E1%84%86%E1%85%A1%E1%86%AB%E1%84%83%E1%85%B3%E1%86%AF%E1%84%80%E1%85%B5%201e506e318ccb45608aae447971e07ca3/Untitled.png)
+
+출처 : [https://medium.com/@limgyumin/코틀린-의-apply-with-let-also-run-은-언제-사용하는가-4a517292df29](https://medium.com/@limgyumin/%EC%BD%94%ED%8B%80%EB%A6%B0-%EC%9D%98-apply-with-let-also-run-%EC%9D%80-%EC%96%B8%EC%A0%9C-%EC%82%AC%EC%9A%A9%ED%95%98%EB%8A%94%EA%B0%80-4a517292df29)

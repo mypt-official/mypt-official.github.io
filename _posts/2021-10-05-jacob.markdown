@@ -1,0 +1,108 @@
+---
+layout: post
+title:  "리소스 관리"
+categories: Resource
+---
+
+# 리소스 관리
+
+리소스란
+
+: 앱에서 사용하는 다양한 미디어 파일, 데이터 파일 등을 리소스 파일이라고 부른다.
+
+- 안드로이드는 리소스 파일들을 res 폴더를 통해 관리한다.
+- 안드로이드는 이미지와 xml파일을 리소스로 관리하며 xml파일을 안드로이드에서 정의한 데이터들을 관리하는 용도로 사용한다.
+- xml 파일로 관리되는 데이터들은 언어, 크기 등에 따라 단말기에 대응할 수 있도록 처리할 수 있다.
+
+안드로이드에서 리소스 파일을 사용하고 싶다면 R.(폴더명).(사용하고 싶은 리소스파일 이름) 으로 호출 할 수 있다.
+
+```kotlin
+R.layout.activity_main
+R.drawable.icon_next
+R.string.app_name
+```
+
+문자열의 경우 고정된 문자열이 아닌 값을 사용하고 싶다면 res파일 안에 %s, %d, %f 등을 사용하여 변경할 수 있다.
+
+```kotlin
+// resource 파일
+// %s : 문자열, %d : 정수, %f : 실수
+// formatted="false" : 모든 안드로이드 버전에서 사용 가능하게 하는 코드
+<resource>
+	<string name="introduce_name_age" formatted="false"> 안녕하세요 저의 이름은 %s이고, 나이는 %d살 입니다. 몸무게는 %fkg 입니다.</string>
+</resource>
+
+// 사용하는 곳
+// 문자열은 자주 사용되기 때문에 getString("R.string.이름")을 제공하지만 
+// 제공되지 않는 것들은 예) resource.getString(값) 을 사용해야한다.
+val string = String.format(getString(R.string.introduce_name_age, "Jacob", 28, 80.0)
+
+logfunction(string)
+
+// 출력 값
+안녕하세요 저의 이름은 Jacob이고, 나이는 28살 입니다. 몸무게는 80.0kg 입니다.
+```
+
+리소스 파일에서는 단위별로 저장할 수 있다. (px, dp, sp, mm, in, pt)
+
+코드로 화면에 어떤 값을 적용시킬 때는 px로 사용하기 때문에 리소스 파일에 단위를 저장시켜놓고 변환하여 사용한다.
+
+```kotlin
+<resource>
+	<dimen name="px">1px</dimen>
+	<dimen name="dp">1dp</dimen>
+	<dimen name="sp">1sp</dimen>
+	<dimen name="mm">1mm</dimen>
+	<dimen name="inch">1in</dimen>
+	<dimen name="pt">1pt</dimen>
+</resource>
+
+val px = resource.getDimension(R.dimen.px)
+val dp = resource.getDimension(R.dimen.dp)
+val sp = resource.getDimension(R.dimen.sp)
+val mm = resource.getDimension(R.dimen.mm)
+val inch = resource.getDimension(R.dimen.inch)
+val pt = resource.getDimension(R.dimen.pt)
+
+// 실제로 코드로 구현할 때
+// 사용하면 안되는 예.
+view_padding = 20
+viewPager.setPadding(view_padding)
+// 결과는 20px로 인식되어 디바이스 크기마다 달라짐
+
+// 올바른 예
+view_padding = resources.getDimension(R.dimen.dp).toInt() * 20
+viewPager.setPadding(view_padding)
+//결과는 디바이스 크기별로 20dp로 변환되어 일정값을 적용시킬 수 있음
+```
+
+출력을 하게되면 각각 디바이스의 화면 크기별로 단위당 몇 px을 사용하는지 알 수 있다.
+
+실제로 코드로 화면 을 구현할 때 많이 이용한다.
+
+이미지로 애니메이션도 만들 수 있다. 혹은 이미지를 연속적으로 변경할 수 있다.
+
+```kotlin
+// duration = 0.1초 뒤에 다음 이미지로
+// android:oneshot="true" 라고 정의하면 애니메이션이 한번만 작동하고 멈춤.
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android" android:oneshot="true">
+	<item android:drawable="@drawable/ani_img1" android:duration="100"/>
+	<item android:drawable="@drawable/ani_img2" android:duration="100"/>
+	<item android:drawable="@drawable/ani_img3" android:duration="100"/>
+	<item android:drawable="@drawable/ani_img4" android:duration="100"/>
+	<item android:drawable="@drawable/ani_img5" android:duration="100"/>
+	<item android:drawable="@drawable/ani_img6" android:duration="100"/>
+</animation-list>
+```
+
+코드로 구현하는 방법은
+
+ imageView.setImageResource(R.drawable.파일이름) 
+
+val animation  = imageView.drawable as AnimationDrawable
+
+ani.start() / ani.stop()
+
+으로 구현할 수 있다.
+
+이런식으로 이미지들을 만들어 놓으면 progressbar (로딩바)를 직접 만들어볼 수 있다.
