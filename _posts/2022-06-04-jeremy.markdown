@@ -1,3 +1,10 @@
+---
+layout: post
+title:  "Moya가 모야?"
+date:   2022-06-04 10:46:00 +0900
+categories: [프로그래밍]
+---
+
 # Moy# Moya
 
 ## Moya가 모야?
