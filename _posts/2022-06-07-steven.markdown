@@ -17,7 +17,7 @@ categories: [프로그래밍]
 
 ## 1. 확대된 이미지를 표시하는 뷰컨트롤러 생성하기
 
-![Frame 1](../images/2022-06-07-steven.assets/Frame 1.png)
+![Frame 1](/images/2022-06-07-steven.assets/Frame 1.png)
 
 ```swift
 class PinchedImageViewController: UIViewController {
@@ -120,7 +120,7 @@ private func pinchGestureBegan(_ gesture: UIPinchGestureRecognizer, originImageV
 
 ### 2. 핀치 제스쳐가 변할 때 실행될 함수 작성
 
-![Frame 2](../images/2022-06-07-steven.assets/Frame 2.png)
+![Frame 2](/images/2022-06-07-steven.assets/Frame 2.png)
 
 중심축과 크기를 제스쳐에 기반해 계산한 뒤 적용해준다.
 
