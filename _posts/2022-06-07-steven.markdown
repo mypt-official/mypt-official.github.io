@@ -1,0 +1,252 @@
+---
+layout: post
+title:  "인스타그램 스타일 핀치 줌 따라하기 (Swift)"
+date:   2022-06-07 13:10:00 +0900
+categories: [프로그래밍]
+---
+
+# 인스타그램 스타일 핀치 줌 따라하기 (Swift)
+
+### 사용할 기술
+
+- UIPinchGestureRecognizer
+- UIPanGestureRecognizer
+- CGAffineTransform
+
+> 본문에선 SnapKit, RxSwift, RxGesture를 추가로 사용한다. 애플에서 제공하는 오토레이아웃 및 델리게이트 객체를 이용해도 동일하게 적용 가능하다.
+
+## 1. 확대된 이미지를 표시하는 뷰컨트롤러 생성하기
+
+![Frame 1](../images/2022-06-07-steven.assets/Frame 1.png)
+
+```swift
+class PinchedImageViewController: UIViewController {
+    /// 확대된 이미지뷰
+    private var pinchedImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        return iv
+    }()
+    /// 뒷배경을 어둡게 하기 위한 뷰
+    private var dimmedView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .black
+        view.alpha = 0
+        return view
+    }()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        showWithAnimation()
+    }
+    
+    private func setupUI() {
+        [dimmedView, pinchedImageView].forEach {
+            view.addSubview($0)
+        }
+        dimmedView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+    
+    /// 뷰컨트롤러가 나타날 때 호출하며 배경을 점진적으로 어둡게 만든다.
+    private func showWithAnimation() {
+        UIView.animate(withDuration: 0.2) { [unowned self] in
+            dimmedView.alpha = 0.6
+        }
+    }
+    /// 이미지를 원래 상태로 되돌리고 배경을 투명하게 만든 뒤 뷰컨트롤러를 제거한다.
+    func dismissWithAnimation(completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: 0.2) { [unowned self] in
+            dimmedView.alpha = 0.0
+            pinchedImageView.transform = .identity
+        } completion: { [unowned self] result in
+            completion?()
+            dismiss(animated: false)
+        }
+    }
+    
+    /// 이미지 뷰의 위치와 크기를 조절하기 위한 프로퍼티
+    var imageTransform: CGAffineTransform {
+        get {
+            pinchedImageView.transform
+        }
+        set {
+            pinchedImageView.transform = newValue
+        }
+    }
+    func setImage(_ image: UIImage?) {
+        pinchedImageView.image = image
+    }
+    func setFrame(_ frame: CGRect) {
+        pinchedImageView.frame = frame
+    }
+}
+```
+
+## 2. 핀치 제스쳐 핸들링하기
+
+### 1. 핀치 제스쳐가 시작될 때 실행될 함수 작성
+
+본문에선 UIImageView에만 적용해볼 것이기 때문에 UIImageView를 익스텐션하여 함수를 추가했다. 편리하게 적용하기 위해 UIView의 부모 뷰컨트롤러를 찾는 익스텐션을 추가하여 사용했다.
+
+```swift
+private func pinchGestureBegan(_ gesture: UIPinchGestureRecognizer, originImageView: UIImageView) -> PinchedImageViewController? {
+    // 핀치이미지뷰컨트롤러를 표시하기 위한 상위 뷰컨트롤러를 찾는다
+    guard let parentVC = self.parentViewController else {
+        return nil
+    }
+    let pinchVC = PinchedImageViewController()
+    // 애니메이션 없이 VC를 바로 표시한다
+    pinchVC.modalPresentationStyle = .overFullScreen
+    parentVC.present(pinchVC, animated: false)
+    
+    // 이미지를 설정하고 크기를 뷰에 맞게 만든다
+    pinchVC.setImage(originImageView.image)
+    let convertedFrame = originImageView.convert(originImageView.bounds, to: pinchVC.view)
+    pinchVC.setFrame(convertedFrame)
+    // 기존의 이미지뷰는 잠시 가린다
+    originImageView.alpha = 0
+    
+    return pinchVC
+}
+```
+
+### 2. 핀치 제스쳐가 변할 때 실행될 함수 작성
+
+![Frame 2](../images/2022-06-07-steven.assets/Frame 2.png)
+
+중심축과 크기를 제스쳐에 기반해 계산한 뒤 적용해준다.
+
+```swift
+private func pinchGestureChanged(
+    _ gesture: UIPinchGestureRecognizer,
+    originImageView: UIImageView,
+    minScale: CGFloat, maxScale: CGFloat,
+    viewController: PinchedImageViewController?
+) {
+    guard let vc = viewController else { return }
+    
+    // 스케일 수치의 최소값 및 최대값을 제한한다
+    var newScale = gesture.scale
+    if newScale < minScale {
+        newScale = minScale
+    } else if newScale > maxScale {
+        newScale = maxScale
+    }
+    // 제스쳐의 위치에 기반하여 뷰의 확대 축을 옮긴다
+    let gesturePoint = gesture.location(in: originImageView)
+    let pinchCenter = CGPoint(
+        x: gesturePoint.x - originImageView.bounds.midX,
+        y: gesturePoint.y - originImageView.bounds.midY)
+    // 계산한 트랜스폼을 적용한다
+    vc.imageTransform = CGAffineTransform(
+        translationX: pinchCenter.x, y: pinchCenter.y)
+        .scaledBy(x: newScale, y: newScale)
+        .translatedBy(x: -pinchCenter.x, y: -pinchCenter.y)
+}
+```
+
+### 3. 핀치 제스쳐가 끝나면 실행될 함수 작성
+
+```swift
+private func pinchGestureEnded(
+    _ gesture: UIPinchGestureRecognizer,
+    originImageView: UIImageView,
+    viewController: PinchedImageViewController?
+) {
+    guard let vc = viewController else { return }
+    // 핀치이미지뷰컨트롤러를 제거하고 기존 이미지를 다시 표시한다
+    vc.dismissWithAnimation() {
+        originImageView.alpha = 1
+    }
+}
+```
+
+## 3. 팬 제스쳐 핸들링하기
+
+핀치 제스쳐만 위치를 기반으로 구현할 경우 손가락 위치를 옮기면 반대되는 방향으로 이동하게 된다. (스케일 축이 중심점을 기반으로 반대편으로 이동하기 때문)
+
+그래서 팬 제스쳐를 사용해야만 사진이 손을 따라가게 만들 수 있다.
+
+```swift
+private func panGestureChanged(_ gesture: UIPanGestureRecognizer, viewController: PinchedImageViewController?) {
+    guard let vc = viewController else {
+        return
+    }
+    // 제스쳐의 위치를 기반으로 뷰의 위치를 변경해준다
+    let point = gesture.translation(in: vc.view)
+    vc.imageTransform = vc.imageTransform.translatedBy(x: point.x, y: point.y)
+}
+```
+
+## 4. 제스쳐를 뷰에 연결하기
+
+각 제스쳐를 적합하게 연결시키면 완성이다. 만약 백그라운드 뷰에 스크롤뷰 등의 다른 제스쳐를 인식하는 뷰가 있다면 델리게이트 옵션에서 `simultaneousRecognitionPolicy`를 `never`로 설정해야 스크롤링이나 다른 제스쳐와 동시에 인식되는 현상을 막을 수 있다.
+
+사용하려면 UIImageView에서 bindPinchZoomGesture를 호출해주면 된다. UIImageView의 익스텐션이기 때문에 어떤 뷰/뷰컨트롤러에서든 해당 함수만 호출해주면 적용이 가능하다.
+
+```swift
+private weak var pinchViewController: PinchedImageViewController?
+
+extension UIImageView {
+    
+    func bindPinchZoomGesture(minScale: CGFloat = 1.0, maxScale: CGFloat = 2.0, disposedBy disposeBag: DisposeBag) {
+        self.rx.pinchGesture(configuration: { gesture, delegate in
+            delegate.simultaneousRecognitionPolicy = .never
+        })
+            .subscribe(onNext: { [unowned self] gesture in
+            switch gesture.state {
+            case .began:
+                pinchViewController = pinchGestureBegan(gesture, originImageView: self)
+            case .changed:
+                pinchGestureChanged(
+                    gesture, originImageView: self,
+                    minScale: minScale, maxScale: maxScale,
+                    viewController: pinchViewController)
+            case .ended:
+                pinchGestureEnded(
+                    gesture, originImageView: self,
+                    viewController: pinchViewController)
+            default: break
+            }
+        }).disposed(by: disposeBag)
+        
+        self.rx.panGesture()
+            .when(.changed)
+            .subscribe(onNext: { [unowned self] gesture in
+                panGestureChanged(gesture, viewController: pinchViewController)
+            }).disposed(by: disposeBag)
+    }
+}
+```
+
+# 사용한 익스텐션
+
+뷰의 뷰컨트롤러를 바로 가져오기 위해 사용한 익스텐션이다.
+
+```swift
+import UIKit
+
+extension UIView {
+    var parentViewController: UIViewController? {
+        var parentResponder: UIResponder? = self.next
+        while parentResponder != nil {
+            if let vc = parentResponder as? UIViewController {
+                return vc
+            }
+            parentResponder = parentResponder?.next
+        }
+        return nil
+    }
+}
+```
+
+
+
