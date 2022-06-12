@@ -247,6 +247,6 @@ private fun insert(user : User) = SqlBuilder().apply {
 
 아래 사진은 각 코드의 구현 방식과 예를 사진으로 정리 해둔 것이기에 기억이 나지 않을 때 한 번씩 들여다 보면 좋을 것 같습니다.
 
-![2022_06_06_01_jacob]<img src="/images/2022_06_06_01_jacob.png" width="750px" height="300px" title="데이터 시각화" alt="데이터 시각화"/>
+<img src="/images/2022_06_06_01_jacob.png" width="750px" height="600px" title="데이터 시각화" alt="데이터 시각화"/>
 
 출처 : [https://medium.com/@limgyumin/코틀린-의-apply-with-let-also-run-은-언제-사용하는가-4a517292df29](https://medium.com/@limgyumin/%EC%BD%94%ED%8B%80%EB%A6%B0-%EC%9D%98-apply-with-let-also-run-%EC%9D%80-%EC%96%B8%EC%A0%9C-%EC%82%AC%EC%9A%A9%ED%95%98%EB%8A%94%EA%B0%80-4a517292df29)
