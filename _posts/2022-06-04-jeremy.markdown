@@ -7,7 +7,7 @@ categories: [프로그래밍]
 
 # Moya
 
-<img src="https://s3.us-west-2.amazonaws.com/secure.notion-static.com/8175aa7e-09e9-4ec4-8998-b8caad825eab/Untitled.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20220607%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20220607T031722Z&X-Amz-Expires=86400&X-Amz-Signature=be5702c71bc10073466e4bc11b0f2ca06f427f892f1ceff013508321e502a409&X-Amz-SignedHeaders=host&response-content-disposition=filename%20%3D%22Untitled.png%22&x-id=GetObject" width="750px" height="300px" title="데이터 시각화" alt="moya"/>
+![Moya](/images/jeremy_Network/Moya.png)
 
 > ** `Alamofire`가 있지만 굳이 `Moya`를 쓰는 이유 **
 > 
@@ -154,8 +154,8 @@ class UserViewController: UIViewController {
     }
 }
 ```
-
-### 출처:
+---
+## 출처:
 
 [[Moya] Moya프레임 워크 (RESTFul API) (tistory.com)](https://ios-development.tistory.com/193)
 
