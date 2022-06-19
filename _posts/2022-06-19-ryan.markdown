@@ -36,5 +36,3 @@ categories: [스타트업]
 - CC 플로우에 대한 이해
 -  
 ```
-
-출처 : [http://www.thedigitalmkt.com/guide-creating-a-go-to-market-strategy/]
